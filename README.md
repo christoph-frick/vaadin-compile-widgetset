@@ -1,4 +1,1 @@
-vaadin-compile-widgetset
-========================
-
-Example of how to add Vaadin Addons to a Grails application and compile the widgetset
+See the tutorial https://vaadin.com/wiki/-/wiki/Main/Vaadin+on+Grails+-+Widgetset+Compilation
