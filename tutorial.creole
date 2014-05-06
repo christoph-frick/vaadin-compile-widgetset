@@ -1,0 +1,90 @@
+//Versions used in this tutorial: Grails 2.3.x, Vaadin 7.1.x, **Vaadin Grails Plugin >=7.1.15** (the script for compilation was added in this version). It expects a previously setup project.//
+
+This tutorial focuses on the compilation of widgetsets, which is usually needed once you want to use [[https://vaadin.com/directory|Vaadin Addons]].
+
+In this example we will add the excellent [[https://vaadin.com/directory#addon/tokenfield:vaadin|TokenField]] and [[https://vaadin.com/directory#addon/ckeditor-wrapper-for-vaadin:vaadin|CKEditor]] Addons.
+
+First add the dependencies.  On the page of the Addon you can grab the group/artifact/version and maybe special instructions. So let's add the TokenField and the CKEditor to {{{BuildConfig.groovy}}}:
+
+{{{
+    repositories {
+        // ...
+        // Repository for the vaadin provided addons
+        mavenRepo 'http://maven.vaadin.com/vaadin-addons'
+    }
+
+    dependencies {
+        // ...
+        // Add the artifacts to the dependencies (not plugins!)
+        compile 'org.vaadin.addons:tokenfield:7.0.1'
+        compile 'org.vaadin.addons:ckeditor-wrapper-for-vaadin:7.9.0'
+    }
+
+}}}
+
+Refresh the project dependencies.
+
+Next we create a widgetset.  Create a new file in {{{src/java/com/mycompany/widgetset.gwt.xml}}}:
+
+{{{
+<!DOCTYPE module PUBLIC "-//Google Inc.//DTD Google Web Toolkit 2.0//EN" "http://google-web-toolkit.googlecode.com/svn/releases/2.0/distro-source/core/src/gwt-module.dtd">
+<module>
+    <inherits name="org.vaadin.tokenfield.TokenfieldWidgetset" />
+    <inherits name="org.vaadin.openesignforms.ckeditor.widgetset.VaadinCKEditorWidgetset"/>
+</module>
+}}}
+
+Depending on your IDE support of GWT this file might already have auto complete.  Note the choice of the directory and filename above: {{{src/java}}} because it's in the classpath, {{{com/mycompany}}} is the package and {{{widgetset}}} is the name of the widgetset itself.
+
+Now activate the widgetset in {{{VaadinConfig.groovy}}}:
+
+{{{
+vaadin {
+    // ...
+    // widgetset to use: package + filename without .gwt.xml
+    widgetset = 'com.mycompany.widgetset'
+}}}
+
+Let's add the fields to our default UI class in {{{grails-app/vaadin/app/MyUI.groovy}}}:
+
+{{{
+package app
+
+import com.vaadin.grails.Grails
+import com.vaadin.server.VaadinRequest
+import com.vaadin.ui.UI
+import com.vaadin.ui.VerticalLayout
+import org.vaadin.openesignforms.ckeditor.CKEditorTextField
+import org.vaadin.tokenfield.TokenField
+
+class MyUI extends UI {
+
+    @Override
+    protected void init(VaadinRequest vaadinRequest) {
+        setContent(new VerticalLayout().with{
+            addComponent(new TokenField().with{
+                caption = Grails.i18n("Tags")
+                required = true
+                containerDataSource.addItem("Vaadin")
+                containerDataSource.addItem("Grails")
+                return it
+            })
+            addComponent(new CKEditorTextField().with{
+                caption = Grails.i18n("Text")
+                return it
+            })
+            return it
+        })
+    }
+}
+}}}
+
+And finally compile the widgetset.
+
+{{{
+grails vaadin-compile-widgetset --verbose
+}}}
+
+The {{{--verbose}}} will show you what is going on.  The compilation will take some time, depending on your box.  The compilation is usually needed after changing your {{{.gwt.xml}}} file, cleaning the project, and changing the Vaadin version.  If Vaadin lacks informations about the widgetset it will tell you in the logs and within the application like this: {{{Widgetset 'com.vaadin.DefaultWidgetSet' does not contain implementation for org.vaadin.openesignforms.ckeditor.CKEditorTextField...}}} (This errors shows the use of the CKEditor, but with the default widgetset).
+
+After this steps, if you {{{run-app}}}, your app makes use of the two addon widgets.
